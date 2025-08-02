@@ -1,0 +1,1 @@
+worker: python potato_bot.py
