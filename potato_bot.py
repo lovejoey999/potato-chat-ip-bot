@@ -70,6 +70,42 @@ class UltimateIPLookupService:
                 'display_name': 'Eassi',
                 'url': 'https://freegeoip.app/json/{ip}',
                 'parser': self._parse_freegeoip
+            },
+            {
+                'name': 'IPInfoPlus',
+                'display_name': 'Moe+',
+                'url': 'https://ipinfo.io/{ip}/json?token=free',
+                'parser': self._parse_ipinfo_plus
+            },
+            {
+                'name': 'IPStack',
+                'display_name': 'Ease',
+                'url': 'https://ipapi.co/{ip}/json',
+                'parser': self._parse_ipstack_alt
+            },
+            {
+                'name': 'CZ88',
+                'display_name': 'CZ88',
+                'url': 'https://ip.zxinc.org/api.php?type=json&ip={ip}',
+                'parser': self._parse_cz88
+            },
+            {
+                'name': 'IPLeak',
+                'display_name': 'Leak',
+                'url': 'https://ipleak.net/json/{ip}',
+                'parser': self._parse_ipleak
+            },
+            {
+                'name': 'IP2Location',
+                'display_name': 'IP2Location',
+                'url': 'https://ipwhois.app/json/{ip}',
+                'parser': self._parse_ip2location_alt
+            },
+            {
+                'name': 'DigitalElement',
+                'display_name': 'Digital Element',
+                'url': 'https://api.digitalelement.com/ip/{ip}',
+                'parser': self._parse_digital_element
             }
         ]
     
@@ -134,6 +170,7 @@ class UltimateIPLookupService:
             'country': self._translate_country(data.get('country', '未知')),
             'region': self._translate_region(data.get('region', '未知')),  
             'city': self._translate_city(data.get('city', '未知')),
+            'isp': data.get('org', '未知'),
             'org': data.get('org', '未知'),
             'timezone': data.get('timezone', '未知'),
             'latitude': float(loc[0]) if len(loc) > 0 else 0,
@@ -147,11 +184,11 @@ class UltimateIPLookupService:
             return None
             
         return {
-            'source': 'Kiwi',
+            'source': 'Maxmind',
             'ip': data.get('ip', ''),
-            'country': data.get('country_name', '未知'),
-            'region': data.get('state_prov', '未知'),
-            'city': data.get('city', '未知'),
+            'country': self._translate_country(data.get('country_name', '未知')),
+            'region': self._translate_region(data.get('state_prov', '未知')),
+            'city': self._translate_city(data.get('city', '未知')),
             'isp': data.get('isp', '未知'),
             'org': data.get('organization', '未知'),
             'timezone': data.get('time_zone', {}).get('name', '未知'),
@@ -198,6 +235,114 @@ class UltimateIPLookupService:
             'latitude': float(data.get('latitude', 0)),
             'longitude': float(data.get('longitude', 0)),
             'zip_code': data.get('zip_code', '未知')
+        }
+    
+    def _parse_ipinfo_plus(self, data):
+        """解析IPInfo Plus回應"""
+        if 'error' in data:
+            return None
+            
+        loc = data.get('loc', '0,0').split(',')
+        
+        return {
+            'source': 'Moe+',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('country', '未知')),
+            'region': self._translate_region(data.get('region', '未知')),
+            'city': self._translate_city(data.get('city', '未知')),
+            'isp': data.get('org', '未知'),
+            'org': data.get('org', '未知'),
+            'timezone': data.get('timezone', '未知'),
+            'latitude': float(loc[0]) if len(loc) > 0 else 0,
+            'longitude': float(loc[1]) if len(loc) > 1 else 0,
+            'postal': data.get('postal', '未知')
+        }
+    
+    def _parse_ipstack_alt(self, data):
+        """解析IPStack替代源回應"""
+        if 'error' in data:
+            return None
+            
+        return {
+            'source': 'Ease',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('country_name', '未知')),
+            'region': self._translate_region(data.get('region', '未知')),
+            'city': self._translate_city(data.get('city', '未知')),
+            'isp': data.get('org', '未知'),
+            'org': data.get('org', '未知'),
+            'timezone': data.get('timezone', '未知'),
+            'latitude': float(data.get('latitude', 0)),
+            'longitude': float(data.get('longitude', 0)),
+            'zip_code': data.get('postal', '未知')
+        }
+    
+    def _parse_cz88(self, data):
+        """解析CZ88回應"""
+        if data.get('code') != 200:
+            return None
+            
+        return {
+            'source': 'CZ88',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('data', {}).get('country', '未知')),
+            'region': self._translate_region(data.get('data', {}).get('region', '未知')),
+            'city': self._translate_city(data.get('data', {}).get('city', '未知')),
+            'isp': data.get('data', {}).get('isp', '未知'),
+            'org': data.get('data', {}).get('isp', '未知')
+        }
+    
+    def _parse_ipleak(self, data):
+        """解析IPLeak回應"""
+        if 'error' in data:
+            return None
+            
+        return {
+            'source': 'Leak',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('country_name', '未知')),
+            'region': self._translate_region(data.get('region_name', '未知')),
+            'city': self._translate_city(data.get('city_name', '未知')),
+            'isp': data.get('isp_name', '未知'),
+            'org': data.get('as_name', '未知'),
+            'latitude': float(data.get('latitude', 0)),
+            'longitude': float(data.get('longitude', 0))
+        }
+    
+    def _parse_ip2location_alt(self, data):
+        """解析IP2Location替代源回應"""
+        if not data.get('success', False):
+            return None
+            
+        return {
+            'source': 'IP2Location',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('country', '未知')),
+            'region': self._translate_region(data.get('region', '未知')),
+            'city': self._translate_city(data.get('city', '未知')),
+            'isp': data.get('isp', '未知'),
+            'org': data.get('org', '未知'),
+            'timezone': data.get('timezone_name', '未知'),
+            'latitude': float(data.get('latitude', 0)),
+            'longitude': float(data.get('longitude', 0)),
+            'zip_code': data.get('zip_code', '未知')
+        }
+    
+    def _parse_digital_element(self, data):
+        """解析Digital Element回應"""
+        if 'error' in data:
+            return None
+            
+        return {
+            'source': 'Digital Element',
+            'ip': data.get('ip', ''),
+            'country': self._translate_country(data.get('country', '未知')),
+            'region': self._translate_region(data.get('region', '未知')),
+            'city': self._translate_city(data.get('city', '未知')),
+            'isp': data.get('isp', '未知'),
+            'org': data.get('organization', '未知'),
+            'latitude': float(data.get('latitude', 0)),
+            'longitude': float(data.get('longitude', 0))
         }
     
     def _translate_country(self, country):
@@ -429,7 +574,8 @@ class UltimateIPLookupService:
             'Hebi': '鶴壁市',
             'Pingdingshan': '平頂山市',
             'Zhumadian': '駐馬店市',
-            'Zhoushan': '舟山市'
+            'Zhoushan': '舟山市',
+            'Tianshui': '天水市'
         }
         return city_map.get(city, city)
     
